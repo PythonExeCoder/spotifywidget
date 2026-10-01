@@ -5,41 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Spotify Widget — стильный музыкальный пульт для Windows</title>
 
-<!-- ==================== SEO / SOCIAL ==================== -->
 <meta name="description" content="Минималистичный виджет Spotify для рабочего стола Windows. Определяет трек, показывает статус, управляет воспроизведением. Написан на Python + PyQt6, без API." />
 <meta name="theme-color" content="#0a0b0d" />
 
-<!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Spotify Widget — музыка под рукой" />
 <meta property="og:description" content="Стильный виджет Spotify для Windows. Один .exe, ноль зависимостей, полное управление воспроизведением." />
-<meta property="og:url" content="https://YOUR_USERNAME.github.io/YOUR_REPO/" /><!-- ЗАМЕНИ -->
-<meta property="og:image" content="https://YOUR_USERNAME.github.io/YOUR_REPO/preview.png" /><!-- ЗАМЕНИ -->
+<meta property="og:url" content="https://PythonExeCoder.github.io/spotifywidget/" />
+<meta property="og:image" content="https://PythonExeCoder.github.io/spotifywidget/preview.png" />
 <meta property="og:site_name" content="Spotify Widget" />
 
-<!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Spotify Widget — музыка под рукой" />
 <meta name="twitter:description" content="Стильный виджет Spotify для Windows. Один .exe, ноль зависимостей." />
-<meta name="twitter:image" content="https://YOUR_USERNAME.github.io/YOUR_REPO/preview.png" /><!-- ЗАМЕНИ -->
+<meta name="twitter:image" content="https://PythonExeCoder.github.io/spotifywidget/preview.png" />
 
-<!-- Favicon (SVG inline) -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%231DB954'/%3E%3Cpath d='M28 42c12-4 32-3 44 4M30 54c10-3 26-2 36 4M32 66c8-2 20-1 28 3' stroke='%23041a0c' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
 
 <style>
-  /* ==================== База ==================== */
-  *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --green: #1DB954;
     --green-bright: #1ed760;
     --green-glow: rgba(29, 185, 84, 0.35);
     --bg: #0a0b0d;
-    --bg-2: #111317;
     --surface: rgba(255, 255, 255, 0.035);
     --border: rgba(255, 255, 255, 0.08);
     --text: #eef0f3;
@@ -59,322 +49,124 @@
     position: relative;
   }
 
-  /* ==================== Анимированный фон ==================== */
-  .bg-orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(110px);
-    opacity: 0.35;
-    pointer-events: none;
-    z-index: 0;
-    will-change: transform;
-  }
-  .orb-1 {
-    width: 520px; height: 520px;
-    background: radial-gradient(circle, var(--green), transparent 70%);
-    top: -160px; left: -160px;
-    animation: float1 18s ease-in-out infinite;
-  }
-  .orb-2 {
-    width: 620px; height: 620px;
-    background: radial-gradient(circle, #0e5c2c, transparent 70%);
-    bottom: -260px; right: -220px;
-    animation: float2 22s ease-in-out infinite;
-  }
-  .orb-3 {
-    width: 380px; height: 380px;
-    background: radial-gradient(circle, #1ed760, transparent 70%);
-    top: 40%; left: 55%;
-    opacity: 0.12;
-    animation: float3 26s ease-in-out infinite;
-  }
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(110px); opacity: 0.35; pointer-events: none; z-index: 0; will-change: transform; }
+  .orb-1 { width: 520px; height: 520px; background: radial-gradient(circle, var(--green), transparent 70%); top: -160px; left: -160px; animation: float1 18s ease-in-out infinite; }
+  .orb-2 { width: 620px; height: 620px; background: radial-gradient(circle, #0e5c2c, transparent 70%); bottom: -260px; right: -220px; animation: float2 22s ease-in-out infinite; }
+  .orb-3 { width: 380px; height: 380px; background: radial-gradient(circle, #1ed760, transparent 70%); top: 40%; left: 55%; opacity: 0.12; animation: float3 26s ease-in-out infinite; }
 
-  @keyframes float1 {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50%      { transform: translate(80px, 60px) scale(1.15); }
-  }
-  @keyframes float2 {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50%      { transform: translate(-100px, -80px) scale(1.1); }
-  }
-  @keyframes float3 {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50%      { transform: translate(-120px, 100px) scale(0.85); }
-  }
+  @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(80px,60px) scale(1.15); } }
+  @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-100px,-80px) scale(1.1); } }
+  @keyframes float3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-120px,100px) scale(0.85); } }
 
   .bg-grid {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background-image:
       linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
     background-size: 60px 60px;
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
     -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
-    pointer-events: none;
-    z-index: 1;
+    pointer-events: none; z-index: 1;
   }
 
-  /* ==================== Оболочка ==================== */
-  .wrap {
-    position: relative;
-    z-index: 2;
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 0 28px;
-  }
+  .wrap { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 0 28px; }
 
-  /* ==================== Навигация ==================== */
   nav {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    background: rgba(10, 11, 13, 0.65);
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: rgba(10,11,13,0.65);
     border-bottom: 1px solid transparent;
     transition: border-color .3s, background .3s;
   }
-  nav.scrolled {
-    border-bottom-color: var(--border);
-    background: rgba(10, 11, 13, 0.85);
-  }
+  nav.scrolled { border-bottom-color: var(--border); background: rgba(10,11,13,0.85); }
   .nav-inner {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 16px 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
+    max-width: 1180px; margin: 0 auto; padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
   }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 17px;
-    letter-spacing: -0.01em;
-    color: var(--text);
-    text-decoration: none;
-  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
   .logo-mark {
-    width: 30px; height: 30px;
-    border-radius: 50%;
+    width: 30px; height: 30px; border-radius: 50%;
     background: linear-gradient(135deg, var(--green-bright), var(--green));
-    display: grid;
-    place-items: center;
+    display: grid; place-items: center;
     box-shadow: 0 0 24px var(--green-glow);
     animation: pulse 3s ease-in-out infinite;
   }
   .logo-mark svg { width: 16px; height: 16px; }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 24px var(--green-glow); }
-    50%      { box-shadow: 0 0 40px rgba(29,185,84,0.6); }
-  }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 24px var(--green-glow); } 50% { box-shadow: 0 0 40px rgba(29,185,84,0.6); } }
 
-  .nav-links {
-    display: flex;
-    gap: 32px;
-    font-size: 14px;
-  }
-  .nav-links a {
-    color: var(--text-dim);
-    text-decoration: none;
-    transition: color .2s;
-    position: relative;
-  }
-  .nav-links a::after {
-    content: '';
-    position: absolute;
-    left: 0; bottom: -6px;
-    width: 0; height: 2px;
-    background: var(--green);
-    transition: width .3s;
-  }
+  .nav-links { display: flex; gap: 32px; font-size: 14px; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; transition: color .2s; position: relative; }
+  .nav-links a::after { content: ''; position: absolute; left: 0; bottom: -6px; width: 0; height: 2px; background: var(--green); transition: width .3s; }
   .nav-links a:hover { color: var(--text); }
   .nav-links a:hover::after { width: 100%; }
 
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
+  .nav-right { display: flex; align-items: center; gap: 12px; }
   .gh-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-radius: 100px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 13.5px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 100px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); text-decoration: none; font-size: 13.5px;
     transition: color .2s, background .2s, border-color .2s;
   }
-  .gh-link:hover {
-    color: var(--text);
-    background: rgba(255,255,255,0.07);
-    border-color: rgba(255,255,255,0.16);
-  }
+  .gh-link:hover { color: var(--text); background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.16); }
   .gh-link svg { width: 15px; height: 15px; }
 
-  @media (max-width: 820px) {
-    .nav-links { display: none; }
-    .gh-link span { display: none; }
-  }
+  @media (max-width: 820px) { .nav-links { display: none; } .gh-link span { display: none; } }
 
-  /* ==================== Кнопки ==================== */
   .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 28px;
-    border-radius: 100px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 28px; border-radius: 100px;
+    font-size: 15px; font-weight: 600; text-decoration: none;
+    cursor: pointer; border: none;
     transition: transform .2s, box-shadow .3s, background .2s;
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
   }
   .btn-primary {
     background: linear-gradient(135deg, var(--green-bright), var(--green));
     color: #041a0c;
     box-shadow: 0 8px 32px rgba(29,185,84,0.35);
   }
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 42px rgba(29,185,84,0.55);
-  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 42px rgba(29,185,84,0.55); }
   .btn-primary::after {
-    content: '';
-    position: absolute;
-    inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.35), transparent 80%);
-    transform: translateX(-100%);
-    transition: transform .7s;
+    transform: translateX(-100%); transition: transform .7s;
   }
   .btn-primary:hover::after { transform: translateX(100%); }
 
-  .btn-ghost {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover {
-    background: rgba(255,255,255,0.07);
-    transform: translateY(-2px);
-  }
+  .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.07); transform: translateY(-2px); }
 
-  /* ==================== Hero ==================== */
-  .hero {
-    padding: 100px 0 80px;
-    display: grid;
-    grid-template-columns: 1.05fr 0.95fr;
-    gap: 60px;
-    align-items: center;
-  }
-  @media (max-width: 940px) {
-    .hero { grid-template-columns: 1fr; padding: 70px 0 50px; gap: 40px; }
-  }
+  .hero { padding: 100px 0 80px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 60px; align-items: center; }
+  @media (max-width: 940px) { .hero { grid-template-columns: 1fr; padding: 70px 0 50px; gap: 40px; } }
 
   .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border-radius: 100px;
-    background: rgba(29,185,84,0.08);
-    border: 1px solid rgba(29,185,84,0.25);
-    color: var(--green-bright);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-bottom: 24px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 100px;
+    background: rgba(29,185,84,0.08); border: 1px solid rgba(29,185,84,0.25);
+    color: var(--green-bright); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 24px;
     animation: fadeUp .7s ease both;
   }
-  .badge .dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--green-bright);
-    box-shadow: 0 0 12px var(--green-bright);
-    animation: blink 1.8s ease-in-out infinite;
-  }
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.35; }
-  }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-bright); box-shadow: 0 0 12px var(--green-bright); animation: blink 1.8s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-  h1 {
-    font-size: clamp(38px, 5.4vw, 64px);
-    line-height: 1.05;
-    letter-spacing: -0.03em;
-    font-weight: 800;
-    margin-bottom: 24px;
-    animation: fadeUp .8s .05s ease both;
-  }
-  h1 .accent {
-    background: linear-gradient(120deg, var(--green-bright), #7dffb0);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+  h1 { font-size: clamp(38px, 5.4vw, 64px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 800; margin-bottom: 24px; animation: fadeUp .8s .05s ease both; }
+  h1 .accent { background: linear-gradient(120deg, var(--green-bright), #7dffb0); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-  .lead {
-    font-size: 18px;
-    color: var(--text-dim);
-    max-width: 520px;
-    margin-bottom: 36px;
-    animation: fadeUp .8s .15s ease both;
-  }
+  .lead { font-size: 18px; color: var(--text-dim); max-width: 520px; margin-bottom: 36px; animation: fadeUp .8s .15s ease both; }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeUp .8s .25s ease both; }
 
-  .hero-actions {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    animation: fadeUp .8s .25s ease both;
-  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .meta-line {
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    margin-top: 28px;
-    font-size: 13px;
-    color: var(--text-mute);
-    animation: fadeUp .8s .35s ease both;
-  }
-  .meta-line span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
+  .meta-line { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 28px; font-size: 13px; color: var(--text-mute); animation: fadeUp .8s .35s ease both; }
+  .meta-line span { display: inline-flex; align-items: center; gap: 6px; }
   .meta-line svg { width: 14px; height: 14px; }
 
-  /* ==================== Мокап виджета ==================== */
-  .hero-visual {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    perspective: 1200px;
-  }
+  .hero-visual { position: relative; display: flex; justify-content: center; perspective: 1200px; }
 
   .widget {
-    width: 390px;
-    max-width: 100%;
-    border-radius: 20px;
-    padding: 18px 20px 16px;
+    width: 390px; max-width: 100%; border-radius: 20px; padding: 18px 20px 16px;
     background: linear-gradient(160deg, rgba(32,34,38,0.98), rgba(16,17,20,0.98));
     border: 1px solid rgba(255,255,255,0.09);
     box-shadow:
@@ -384,406 +176,147 @@
     transform: rotateY(-12deg) rotateX(6deg);
     transform-style: preserve-3d;
     animation: hover-widget 6s ease-in-out infinite;
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
   }
-  .widget::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 55%, rgba(29,185,84,0.14));
-    pointer-events: none;
-  }
+  .widget::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(29,185,84,0.14)); pointer-events: none; }
   @keyframes hover-widget {
-    0%, 100% { transform: rotateY(-12deg) rotateX(6deg) translateY(0); }
+    0%,100% { transform: rotateY(-12deg) rotateX(6deg) translateY(0); }
     50%      { transform: rotateY(-12deg) rotateX(6deg) translateY(-14px); }
   }
 
-  .widget-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-  }
+  .widget-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
   .widget-titles { min-width: 0; }
-  .widget-title {
-    font-size: 15px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 260px;
-  }
-  .widget-artist {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 3px;
-  }
-  .widget-close {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    color: var(--text-mute);
-    font-size: 14px;
-    cursor: default;
-  }
+  .widget-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+  .widget-artist { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+  .widget-close { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: var(--text-mute); font-size: 14px; cursor: default; }
 
-  .widget-status {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: rgba(29,185,84,0.9);
-    margin-bottom: 12px;
-  }
-  .widget-status .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green-bright);
-    box-shadow: 0 0 10px var(--green-bright);
-    animation: blink 1.4s ease-in-out infinite;
-  }
+  .widget-status { display: flex; align-items: center; gap: 7px; font-size: 9px; font-weight: 700; letter-spacing: 2px; color: rgba(29,185,84,0.9); margin-bottom: 12px; }
+  .widget-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-bright); box-shadow: 0 0 10px var(--green-bright); animation: blink 1.4s ease-in-out infinite; }
 
-  .eq {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 26px;
-    gap: 3px;
-    margin-bottom: 14px;
-  }
-  .eq-bar {
-    flex: 1;
-    background: linear-gradient(180deg, var(--green-bright), var(--green));
-    border-radius: 3px;
-    height: 20%;
-    animation: eq 1s ease-in-out infinite;
-  }
-  @keyframes eq {
-    0%, 100% { height: 18%; }
-    50%      { height: 88%; }
-  }
+  .eq { display: flex; align-items: center; justify-content: space-between; height: 26px; gap: 3px; margin-bottom: 14px; }
+  .eq-bar { flex: 1; background: linear-gradient(180deg, var(--green-bright), var(--green)); border-radius: 3px; height: 20%; animation: eq 1s ease-in-out infinite; }
+  @keyframes eq { 0%,100% { height: 18%; } 50% { height: 88%; } }
 
-  .widget-controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-  }
-  .ctrl {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: transparent;
-    color: #fff;
-    transition: background .2s;
-  }
+  .widget-controls { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .ctrl { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: transparent; color: #fff; transition: background .2s; }
   .ctrl:hover { background: rgba(255,255,255,0.1); }
-  .ctrl.primary {
-    width: 44px; height: 44px;
-    background: linear-gradient(135deg, var(--green-bright), var(--green));
-    color: #041a0c;
-    box-shadow: 0 6px 24px rgba(29,185,84,0.45);
-  }
+  .ctrl.primary { width: 44px; height: 44px; background: linear-gradient(135deg, var(--green-bright), var(--green)); color: #041a0c; box-shadow: 0 6px 24px rgba(29,185,84,0.45); }
   .ctrl.primary:hover { background: linear-gradient(135deg, #2bef72, #1ed760); }
   .ctrl svg { width: 14px; height: 14px; }
   .ctrl.primary svg { width: 16px; height: 16px; }
 
-  /* ==================== Секции ==================== */
   section { padding: 90px 0; position: relative; z-index: 2; }
+  .section-head { text-align: center; max-width: 640px; margin: 0 auto 60px; }
+  .section-head h2 { font-size: clamp(28px, 3.6vw, 42px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .section-head p { color: var(--text-dim); font-size: 17px; }
 
-  .section-head {
-    text-align: center;
-    max-width: 640px;
-    margin: 0 auto 60px;
-  }
-  .section-head h2 {
-    font-size: clamp(28px, 3.6vw, 42px);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-  }
-  .section-head p {
-    color: var(--text-dim);
-    font-size: 17px;
-  }
-
-  /* ==================== Фичи ==================== */
-  .features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-  }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
   .feature {
-    padding: 30px 28px;
-    border-radius: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
+    padding: 30px 28px; border-radius: 20px;
+    background: var(--surface); border: 1px solid var(--border);
     transition: transform .35s, border-color .35s, background .35s;
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
   }
   .feature::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
     background: linear-gradient(90deg, transparent, rgba(29,185,84,0.5), transparent);
-    opacity: 0;
-    transition: opacity .35s;
+    opacity: 0; transition: opacity .35s;
   }
-  .feature:hover {
-    transform: translateY(-6px);
-    border-color: rgba(29,185,84,0.3);
-    background: rgba(255,255,255,0.055);
-  }
+  .feature:hover { transform: translateY(-6px); border-color: rgba(29,185,84,0.3); background: rgba(255,255,255,0.055); }
   .feature:hover::before { opacity: 1; }
 
   .feature-icon {
-    width: 46px; height: 46px;
-    border-radius: 12px;
-    background: rgba(29,185,84,0.12);
-    border: 1px solid rgba(29,185,84,0.22);
-    display: grid;
-    place-items: center;
-    color: var(--green-bright);
-    margin-bottom: 20px;
+    width: 46px; height: 46px; border-radius: 12px;
+    background: rgba(29,185,84,0.12); border: 1px solid rgba(29,185,84,0.22);
+    display: grid; place-items: center; color: var(--green-bright); margin-bottom: 20px;
   }
   .feature-icon svg { width: 22px; height: 22px; }
 
-  .feature h3 {
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    letter-spacing: -0.01em;
-  }
-  .feature p {
-    color: var(--text-dim);
-    font-size: 14.5px;
-    line-height: 1.6;
-  }
+  .feature h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .feature p { color: var(--text-dim); font-size: 14.5px; line-height: 1.6; }
 
-  /* ==================== Как работает ==================== */
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 26px;
-  }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 26px; }
   .step {
-    position: relative;
-    padding: 30px 26px 26px;
-    border-radius: 18px;
+    position: relative; padding: 30px 26px 26px; border-radius: 18px;
     background: linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
     border: 1px solid var(--border);
   }
   .step-num {
-    position: absolute;
-    top: -18px;
-    left: 26px;
-    width: 40px; height: 40px;
-    border-radius: 12px;
+    position: absolute; top: -18px; left: 26px;
+    width: 40px; height: 40px; border-radius: 12px;
     background: linear-gradient(135deg, var(--green-bright), var(--green));
-    color: #041a0c;
-    font-weight: 800;
-    font-size: 17px;
-    display: grid;
-    place-items: center;
+    color: #041a0c; font-weight: 800; font-size: 17px;
+    display: grid; place-items: center;
     box-shadow: 0 8px 24px rgba(29,185,84,0.4);
   }
-  .step h3 {
-    font-size: 16px;
-    font-weight: 700;
-    margin: 16px 0 8px;
-  }
+  .step h3 { font-size: 16px; font-weight: 700; margin: 16px 0 8px; }
   .step p { color: var(--text-dim); font-size: 14.5px; }
 
-  /* ==================== Install ==================== */
-  .install {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 50px;
-    align-items: center;
-  }
+  .install { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
   @media (max-width: 900px) { .install { grid-template-columns: 1fr; gap: 32px; } }
 
-  .install h2 {
-    font-size: clamp(26px, 3.4vw, 38px);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 18px;
-  }
+  .install h2 { font-size: clamp(26px, 3.4vw, 38px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 18px; }
   .install p { color: var(--text-dim); margin-bottom: 20px; }
 
-  .code {
-    border-radius: 16px;
-    background: #060709;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    box-shadow: 0 24px 60px -20px rgba(0,0,0,0.8);
-  }
-  .code-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid var(--border);
-  }
-  .code-head .d {
-    width: 11px; height: 11px;
-    border-radius: 50%;
-  }
-  .code-head .d1 { background: #ff5f57; }
-  .code-head .d2 { background: #febc2e; }
-  .code-head .d3 { background: #28c840; }
-  .code-head span {
-    margin-left: auto;
-    font-size: 11px;
-    color: var(--text-mute);
-    font-family: "SF Mono", Consolas, monospace;
-  }
-  .code-body {
-    padding: 22px 24px;
-    font-family: "SF Mono", Consolas, "Courier New", monospace;
-    font-size: 13.5px;
-    line-height: 1.85;
-    overflow-x: auto;
-  }
+  .code { border-radius: 16px; background: #060709; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 24px 60px -20px rgba(0,0,0,0.8); }
+  .code-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); }
+  .code-head .d { width: 11px; height: 11px; border-radius: 50%; }
+  .code-head .d1 { background: #ff5f57; } .code-head .d2 { background: #febc2e; } .code-head .d3 { background: #28c840; }
+  .code-head span { margin-left: auto; font-size: 11px; color: var(--text-mute); font-family: "SF Mono", Consolas, monospace; }
+  .code-body { padding: 22px 24px; font-family: "SF Mono", Consolas, "Courier New", monospace; font-size: 13.5px; line-height: 1.85; overflow-x: auto; }
   .code-body .prompt { color: var(--green-bright); user-select: none; margin-right: 8px; }
-  .code-body .cmd    { color: #d3dae3; }
-  .code-body .cmt    { color: var(--text-mute); }
+  .code-body .cmd { color: #d3dae3; }
+  .code-body .cmt { color: var(--text-mute); }
 
-  /* ==================== Статистика ==================== */
   .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 20px;
-    padding: 44px 40px;
-    border-radius: 24px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px; padding: 44px 40px; border-radius: 24px;
     background: linear-gradient(160deg, rgba(29,185,84,0.06), rgba(255,255,255,0.02));
-    border: 1px solid rgba(29,185,84,0.18);
-    text-align: center;
+    border: 1px solid rgba(29,185,84,0.18); text-align: center;
   }
   .stat-num {
-    font-size: clamp(28px, 3.4vw, 40px);
-    font-weight: 800;
-    letter-spacing: -0.03em;
+    font-size: clamp(28px, 3.4vw, 40px); font-weight: 800; letter-spacing: -0.03em;
     background: linear-gradient(135deg, var(--green-bright), #9dffc4);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    line-height: 1.1;
-    margin-bottom: 6px;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 1.1; margin-bottom: 6px;
   }
-  .stat-label {
-    font-size: 13px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+  .stat-label { font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
 
-  /* ==================== CTA ==================== */
   .cta {
-    text-align: center;
-    padding: 80px 40px;
-    border-radius: 28px;
+    text-align: center; padding: 80px 40px; border-radius: 28px;
     background:
       radial-gradient(ellipse at top, rgba(29,185,84,0.16), transparent 60%),
       linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
     border: 1px solid rgba(29,185,84,0.22);
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
   }
   .cta::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
+    content: ''; position: absolute; inset: -2px;
     background: conic-gradient(from 0deg, transparent 0deg, rgba(29,185,84,0.35) 60deg, transparent 120deg);
-    animation: rotate 8s linear infinite;
-    z-index: -1;
-    filter: blur(30px);
-    opacity: 0.6;
+    animation: rotate 8s linear infinite; z-index: -1; filter: blur(30px); opacity: 0.6;
   }
   @keyframes rotate { to { transform: rotate(360deg); } }
 
-  .cta h2 {
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 18px;
-  }
-  .cta p {
-    color: var(--text-dim);
-    font-size: 17px;
-    max-width: 520px;
-    margin: 0 auto 34px;
-  }
+  .cta h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 18px; }
+  .cta p { color: var(--text-dim); font-size: 17px; max-width: 520px; margin: 0 auto 34px; }
   .cta .hero-actions { justify-content: center; animation: none; }
 
-  .version-note {
-    margin-top: 24px;
-    font-size: 12.5px;
-    color: var(--text-mute);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .version-note code {
-    padding: 3px 8px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 6px;
-    font-family: "SF Mono", Consolas, monospace;
-    font-size: 12px;
-    color: var(--text-dim);
-  }
+  .version-note { margin-top: 24px; font-size: 12.5px; color: var(--text-mute); display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .version-note code { padding: 3px 8px; background: rgba(255,255,255,0.06); border-radius: 6px; font-family: "SF Mono", Consolas, monospace; font-size: 12px; color: var(--text-dim); }
 
-  /* ==================== Футер ==================== */
-  footer {
-    padding: 40px 0;
-    border-top: 1px solid var(--border);
-    color: var(--text-mute);
-    font-size: 13.5px;
-  }
-  .footer-inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .footer-inner a {
-    color: var(--text-dim);
-    text-decoration: none;
-    transition: color .2s;
-  }
+  footer { padding: 40px 0; border-top: 1px solid var(--border); color: var(--text-mute); font-size: 13.5px; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .footer-inner a { color: var(--text-dim); text-decoration: none; transition: color .2s; }
   .footer-inner a:hover { color: var(--green-bright); }
   .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
 
-  /* ==================== Reveal ==================== */
-  .reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1);
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
 
   ::-webkit-scrollbar { width: 10px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(29,185,84,0.35);
-    border-radius: 5px;
-  }
+  ::-webkit-scrollbar-thumb { background: rgba(29,185,84,0.35); border-radius: 5px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(29,185,84,0.55); }
-
   ::selection { background: rgba(29,185,84,0.4); }
 </style>
 </head>
@@ -816,15 +349,13 @@
     </div>
 
     <div class="nav-right">
-      <!-- ЗАМЕНИ href на свой репозиторий -->
-      <a class="gh-link" href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener">
+      <a class="gh-link" href="https://github.com/PythonExeCoder/spotifywidget" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/>
         </svg>
         <span>GitHub</span>
       </a>
-      <!-- ЗАМЕНИ href на страницу релизов -->
-      <a href="https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 9px 20px; font-size: 13.5px;">
+      <a href="https://github.com/PythonExeCoder/spotifywidget/releases" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 9px 20px; font-size: 13.5px;">
         Скачать
       </a>
     </div>
@@ -849,8 +380,7 @@
         Написан на Python + PyQt6.
       </p>
       <div class="hero-actions">
-        <!-- ЗАМЕНИ href — прямая ссылка на последний релиз -->
-        <a href="https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest/download/SpotifyWidget.exe" class="btn btn-primary">
+        <a href="https://github.com/PythonExeCoder/spotifywidget/releases/latest/download/SpotifyWidget.exe" class="btn btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -858,8 +388,7 @@
           </svg>
           Скачать для Windows
         </a>
-        <!-- ЗАМЕНИ href на свой репозиторий -->
-        <a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener" class="btn btn-ghost">
+        <a href="https://github.com/PythonExeCoder/spotifywidget" target="_blank" rel="noopener" class="btn btn-ghost">
           Исходный код
         </a>
       </div>
@@ -869,7 +398,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
           </svg>
-          35 МБ · без установки
+          34 МБ · без установки
         </span>
         <span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -886,7 +415,6 @@
       </div>
     </div>
 
-    <!-- Мокап -->
     <div class="hero-visual">
       <div class="widget">
         <div class="widget-head">
@@ -903,20 +431,13 @@
         <div class="eq" id="eq"></div>
         <div class="widget-controls">
           <div class="ctrl">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
           </div>
           <div class="ctrl primary">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1"/>
-              <rect x="14" y="4" width="4" height="16" rx="1"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
           </div>
           <div class="ctrl">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M16 6h2v12h-2zm-3.5 6L4 6v12z"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-3.5 6L4 6v12z"/></svg>
           </div>
         </div>
       </div>
@@ -1082,7 +603,7 @@
         <div class="stat-label">нагрузка CPU</div>
       </div>
       <div>
-        <div class="stat-num">35 МБ</div>
+        <div class="stat-num">34 МБ</div>
         <div class="stat-label">один .exe</div>
       </div>
     </div>
@@ -1096,8 +617,7 @@
       <h2>Готов попробовать?</h2>
       <p>Скачай собранный .exe из GitHub Releases — распакуй, запусти, и наслаждайся музыкой с удобным виджетом на рабочем столе.</p>
       <div class="hero-actions">
-        <!-- ЗАМЕНИ href — прямая ссылка на последний релиз -->
-        <a href="https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest/download/SpotifyWidget.exe" class="btn btn-primary">
+        <a href="https://github.com/PythonExeCoder/spotifywidget/releases/latest/download/SpotifyWidget.exe" class="btn btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -1105,16 +625,14 @@
           </svg>
           Скачать SpotifyWidget.exe
         </a>
-        <!-- ЗАМЕНИ href на страницу релизов -->
-        <a href="https://github.com/YOUR_USERNAME/YOUR_REPO/releases" target="_blank" rel="noopener" class="btn btn-ghost">
+        <a href="https://github.com/PythonExeCoder/spotifywidget/releases" target="_blank" rel="noopener" class="btn btn-ghost">
           Все релизы
         </a>
       </div>
 
       <div class="version-note">
-        Последняя версия: <code>v1.0.0</code>
-        <!-- ЗАМЕНИ USERNAME/REPO -->
-        <a href="https://github.com/YOUR_USERNAME/YOUR_REPO/releases" target="_blank" rel="noopener" style="color: var(--green-bright); text-decoration: none;">Что нового →</a>
+        Последняя версия: <code>spot</code>
+        <a href="https://github.com/PythonExeCoder/spotifywidget/releases/tag/spot" target="_blank" rel="noopener" style="color: var(--green-bright); text-decoration: none;">Что нового →</a>
       </div>
     </div>
   </div>
@@ -1128,10 +646,8 @@
       <div class="footer-links">
         <a href="#features">Возможности</a>
         <a href="#install">Установка</a>
-        <!-- ЗАМЕНИ href на свой репозиторий -->
-        <a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener">GitHub</a>
-        <!-- ЗАМЕНИ href на страницу issues -->
-        <a href="https://github.com/YOUR_USERNAME/YOUR_REPO/issues" target="_blank" rel="noopener">Сообщить о баге</a>
+        <a href="https://github.com/PythonExeCoder/spotifywidget" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/PythonExeCoder/spotifywidget/issues" target="_blank" rel="noopener">Сообщить о баге</a>
       </div>
     </div>
   </div>
@@ -1139,7 +655,6 @@
 
 <!-- ==================== JS ==================== -->
 <script>
-  // ---- Эквалайзер ----
   const eq = document.getElementById('eq');
   const BAR_COUNT = 28;
   for (let i = 0; i < BAR_COUNT; i++) {
@@ -1150,14 +665,12 @@
     eq.appendChild(bar);
   }
 
-  // ---- Навбар ----
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {
     if (window.scrollY > 20) nav.classList.add('scrolled');
     else nav.classList.remove('scrolled');
   });
 
-  // ---- Reveal on scroll ----
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
@@ -1176,7 +689,6 @@
     el.style.transitionDelay = (i * 0.1) + 's';
   });
 
-  // ---- Параллакс мокапа ----
   const widget = document.querySelector('.widget');
   const hero = document.querySelector('.hero');
   if (widget && hero && window.matchMedia('(min-width: 940px)').matches) {
@@ -1192,7 +704,6 @@
     });
   }
 
-  // ---- Плавный скролл ----
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', (e) => {
       const id = a.getAttribute('href');
