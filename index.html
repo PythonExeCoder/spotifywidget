@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spotify Widget — твой музыкальный пульт для Windows</title>
+<style>
+  /* ==================== База ==================== */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --green: #1DB954;
+    --green-bright: #1ed760;
+    --green-glow: rgba(29, 185, 84, 0.35);
+    --bg: #0a0b0d;
+    --bg-2: #111317;
+    --surface: rgba(255, 255, 255, 0.035);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #eef0f3;
+    --text-dim: rgba(255, 255, 255, 0.55);
+    --text-mute: rgba(255, 255, 255, 0.32);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+
+  /* ==================== Анимированный фон ==================== */
+  .bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(110px);
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+  }
+  .orb-1 {
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, var(--green), transparent 70%);
+    top: -160px; left: -160px;
+    animation: float1 18s ease-in-out infinite;
+  }
+  .orb-2 {
+    width: 620px; height: 620px;
+    background: radial-gradient(circle, #0e5c2c, transparent 70%);
+    bottom: -260px; right: -220px;
+    animation: float2 22s ease-in-out infinite;
+  }
+  .orb-3 {
+    width: 380px; height: 380px;
+    background: radial-gradient(circle, #1ed760, transparent 70%);
+    top: 40%; left: 55%;
+    opacity: 0.12;
+    animation: float3 26s ease-in-out infinite;
+  }
+
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(80px, 60px) scale(1.15); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-100px, -80px) scale(1.1); }
+  }
+  @keyframes float3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-120px, 100px) scale(0.85); }
+  }
+
+  /* Сетка на фоне */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ==================== Общая оболочка ==================== */
+  .wrap {
+    position: relative;
+    z-index: 2;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  /* ==================== Навигация ==================== */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    background: rgba(10, 11, 13, 0.65);
+    border-bottom: 1px solid transparent;
+    transition: border-color .3s, background .3s;
+  }
+  nav.scrolled {
+    border-bottom-color: var(--border);
+    background: rgba(10, 11, 13, 0.85);
+  }
+  .nav-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  .logo-mark {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green-bright), var(--green));
+    display: grid;
+    place-items: center;
+    box-shadow: 0 0 24px var(--green-glow);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .logo-mark svg { width: 16px; height: 16px; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 24px var(--green-glow); }
+    50%      { box-shadow: 0 0 40px rgba(29,185,84,0.6); }
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    font-size: 14px;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color .2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -6px;
+    width: 0; height: 2px;
+    background: var(--green);
+    transition: width .3s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover::after { width: 100%; }
+
+  @media (max-width: 720px) { .nav-links { display: none; } }
+
+  /* ==================== Кнопки ==================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: transform .2s, box-shadow .3s, background .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--green-bright), var(--green));
+    color: #041a0c;
+    box-shadow: 0 8px 32px rgba(29,185,84,0.35);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 42px rgba(29,185,84,0.55);
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.35), transparent 80%);
+    transform: translateX(-100%);
+    transition: transform .7s;
+  }
+  .btn-primary:hover::after { transform: translateX(100%); }
+
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.07);
+    transform: translateY(-2px);
+  }
+
+  /* ==================== Hero ==================== */
+  .hero {
+    padding: 100px 0 80px;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 60px;
+    align-items: center;
+  }
+  @media (max-width: 940px) {
+    .hero { grid-template-columns: 1fr; padding: 70px 0 50px; gap: 40px; }
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    background: rgba(29,185,84,0.08);
+    border: 1px solid rgba(29,185,84,0.25);
+    color: var(--green-bright);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    animation: fadeUp .7s ease both;
+  }
+  .badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green-bright);
+    box-shadow: 0 0 12px var(--green-bright);
+    animation: blink 1.8s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+
+  h1 {
+    font-size: clamp(38px, 5.4vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    margin-bottom: 24px;
+    animation: fadeUp .8s .05s ease both;
+  }
+  h1 .accent {
+    background: linear-gradient(120deg, var(--green-bright), #7dffb0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .lead {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 520px;
+    margin-bottom: 36px;
+    animation: fadeUp .8s .15s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    animation: fadeUp .8s .25s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ==================== Мокап виджета ==================== */
+  .hero-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    perspective: 1200px;
+  }
+
+  .widget {
+    width: 390px;
+    max-width: 100%;
+    border-radius: 20px;
+    padding: 18px 20px 16px;
+    background: linear-gradient(160deg, rgba(32,34,38,0.98), rgba(16,17,20,0.98));
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow:
+      0 40px 90px -30px rgba(0,0,0,0.85),
+      0 0 0 1px rgba(255,255,255,0.02),
+      0 0 80px -20px rgba(29,185,84,0.35);
+    transform: rotateY(-12deg) rotateX(6deg);
+    transform-style: preserve-3d;
+    animation: hover-widget 6s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+  }
+  .widget::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 55%, rgba(29,185,84,0.14));
+    pointer-events: none;
+  }
+  @keyframes hover-widget {
+    0%, 100% { transform: rotateY(-12deg) rotateX(6deg) translateY(0); }
+    50%      { transform: rotateY(-12deg) rotateX(6deg) translateY(-14px); }
+  }
+
+  .widget-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .widget-titles { min-width: 0; }
+  .widget-title {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+  }
+  .widget-artist {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+  .widget-close {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--text-mute);
+    font-size: 14px;
+    cursor: default;
+  }
+
+  .widget-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: rgba(29,185,84,0.9);
+    margin-bottom: 12px;
+  }
+  .widget-status .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green-bright);
+    box-shadow: 0 0 10px var(--green-bright);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+
+  /* Эквалайзер */
+  .eq {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 26px;
+    gap: 3px;
+    margin-bottom: 14px;
+  }
+  .eq-bar {
+    flex: 1;
+    background: linear-gradient(180deg, var(--green-bright), var(--green));
+    border-radius: 3px;
+    height: 20%;
+    animation: eq 1s ease-in-out infinite;
+  }
+  @keyframes eq {
+    0%, 100% { height: 18%; }
+    50%      { height: 88%; }
+  }
+
+  .widget-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .ctrl {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: transparent;
+    color: #fff;
+    transition: background .2s;
+  }
+  .ctrl:hover { background: rgba(255,255,255,0.1); }
+  .ctrl.primary {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--green-bright), var(--green));
+    color: #041a0c;
+    box-shadow: 0 6px 24px rgba(29,185,84,0.45);
+  }
+  .ctrl.primary:hover { background: linear-gradient(135deg, #2bef72, #1ed760); }
+  .ctrl svg { width: 14px; height: 14px; }
+  .ctrl.primary svg { width: 16px; height: 16px; }
+
+  /* ==================== Секции ==================== */
+  section { padding: 90px 0; position: relative; z-index: 2; }
+
+  .section-head {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 60px;
+  }
+  .section-head h2 {
+    font-size: clamp(28px, 3.6vw, 42px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .section-head p {
+    color: var(--text-dim);
+    font-size: 17px;
+  }
+
+  /* ==================== Фичи ==================== */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .feature {
+    padding: 30px 28px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: transform .35s, border-color .35s, background .35s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(29,185,84,0.5), transparent);
+    opacity: 0;
+    transition: opacity .35s;
+  }
+  .feature:hover {
+    transform: translateY(-6px);
+    border-color: rgba(29,185,84,0.3);
+    background: rgba(255,255,255,0.055);
+  }
+  .feature:hover::before { opacity: 1; }
+
+  .feature-icon {
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    background: rgba(29,185,84,0.12);
+    border: 1px solid rgba(29,185,84,0.22);
+    display: grid;
+    place-items: center;
+    color: var(--green-bright);
+    margin-bottom: 20px;
+  }
+  .feature-icon svg { width: 22px; height: 22px; }
+
+  .feature h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .feature p {
+    color: var(--text-dim);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  /* ==================== Как работает ==================== */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 26px;
+    counter-reset: step;
+  }
+  .step {
+    position: relative;
+    padding: 30px 26px 26px;
+    border-radius: 18px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border: 1px solid var(--border);
+  }
+  .step-num {
+    position: absolute;
+    top: -18px;
+    left: 26px;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--green-bright), var(--green));
+    color: #041a0c;
+    font-weight: 800;
+    font-size: 17px;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 8px 24px rgba(29,185,84,0.4);
+  }
+  .step h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 16px 0 8px;
+  }
+  .step p { color: var(--text-dim); font-size: 14.5px; }
+
+  /* ==================== Код-блок ==================== */
+  .install {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+  }
+  @media (max-width: 900px) { .install { grid-template-columns: 1fr; gap: 32px; } }
+
+  .install h2 {
+    font-size: clamp(26px, 3.4vw, 38px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+  }
+  .install p { color: var(--text-dim); margin-bottom: 20px; }
+
+  .code {
+    border-radius: 16px;
+    background: #060709;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,0.8);
+  }
+  .code-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-head .d {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+  }
+  .code-head .d1 { background: #ff5f57; }
+  .code-head .d2 { background: #febc2e; }
+  .code-head .d3 { background: #28c840; }
+  .code-head span {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-mute);
+    font-family: "SF Mono", Consolas, monospace;
+  }
+  .code-body {
+    padding: 22px 24px;
+    font-family: "SF Mono", Consolas, "Courier New", monospace;
+    font-size: 13.5px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+  .code-body .prompt { color: var(--green-bright); user-select: none; margin-right: 8px; }
+  .code-body .cmd    { color: #d3dae3; }
+  .code-body .cmt    { color: var(--text-mute); }
+
+  /* ==================== Скриншоты/статистика ==================== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 44px 40px;
+    border-radius: 24px;
+    background: linear-gradient(160deg, rgba(29,185,84,0.06), rgba(255,255,255,0.02));
+    border: 1px solid rgba(29,185,84,0.18);
+    text-align: center;
+  }
+  .stat-num {
+    font-size: clamp(28px, 3.4vw, 40px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--green-bright), #9dffc4);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ==================== CTA ==================== */
+  .cta {
+    text-align: center;
+    padding: 80px 40px;
+    border-radius: 28px;
+    background:
+      radial-gradient(ellipse at top, rgba(29,185,84,0.16), transparent 60%),
+      linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    border: 1px solid rgba(29,185,84,0.22);
+    position: relative;
+    overflow: hidden;
+  }
+  .cta::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(29,185,84,0.35) 60deg, transparent 120deg);
+    animation: rotate 8s linear infinite;
+    z-index: -1;
+    filter: blur(30px);
+    opacity: 0.6;
+  }
+  @keyframes rotate { to { transform: rotate(360deg); } }
+
+  .cta h2 {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+  }
+  .cta p {
+    color: var(--text-dim);
+    font-size: 17px;
+    max-width: 520px;
+    margin: 0 auto 34px;
+  }
+
+  /* ==================== Футер ==================== */
+  footer {
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+    color: var(--text-mute);
+    font-size: 13.5px;
+  }
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .footer-inner a {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .footer-inner a:hover { color: var(--green-bright); }
+
+  /* ==================== Reveal-анимация ==================== */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Прокрутка */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(29,185,84,0.35);
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(29,185,84,0.55); }
+
+  ::selection { background: rgba(29,185,84,0.4); }
+</style>
+</head>
+<body>
+
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+<div class="bg-orb orb-3"></div>
+<div class="bg-grid"></div>
+
+<!-- ==================== NAV ==================== -->
+<nav id="nav">
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#041a0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/>
+          <circle cx="6" cy="18" r="3"/>
+          <circle cx="18" cy="16" r="3"/>
+        </svg>
+      </div>
+      <span>Spotify Widget</span>
+    </div>
+    <div class="nav-links">
+      <a href="#features">Возможности</a>
+      <a href="#how">Как работает</a>
+      <a href="#install">Установка</a>
+      <a href="#download">Скачать</a>
+    </div>
+    <a href="#download" class="btn btn-primary" style="padding: 10px 22px; font-size: 14px;">
+      Скачать
+    </a>
+  </div>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <div class="badge">
+        <span class="dot"></span>
+        Версия 1.0 · Windows 10 / 11
+      </div>
+      <h1>
+        Музыка под рукой.<br>
+        <span class="accent">Всегда на виду.</span>
+      </h1>
+      <p class="lead">
+        Минималистичный виджет Spotify для рабочего стола. Стильный, лёгкий
+        и невероятно быстрый — без API-токенов, авторизаций и лишних окон.
+        Написан на Python за 400 строк, работает прямо из коробки.
+      </p>
+      <div class="hero-actions">
+        <a href="#download" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Скачать для Windows
+        </a>
+        <a href="#features" class="btn btn-ghost">
+          Узнать больше
+        </a>
+      </div>
+    </div>
+
+    <!-- Мокап -->
+    <div class="hero-visual">
+      <div class="widget">
+        <div class="widget-head">
+          <div class="widget-titles">
+            <div class="widget-title">Midnight City</div>
+            <div class="widget-artist">M83 — Hurry Up, We're Dreaming</div>
+          </div>
+          <div class="widget-close">×</div>
+        </div>
+        <div class="widget-status">
+          <span class="dot"></span>
+          PLAYING
+        </div>
+        <div class="eq" id="eq"></div>
+        <div class="widget-controls">
+          <div class="ctrl">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+            </svg>
+          </div>
+          <div class="ctrl primary">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1"/>
+              <rect x="14" y="4" width="4" height="16" rx="1"/>
+            </svg>
+          </div>
+          <div class="ctrl">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 6h2v12h-2zm-3.5 6L4 6v12z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== FEATURES ==================== -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Всё, что нужно — ничего лишнего</h2>
+      <p>Продуманный до мелочей интерфейс, который не мешает работать и всегда под рукой.</p>
+    </div>
+
+    <div class="features">
+      <div class="feature reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+          </svg>
+        </div>
+        <h3>Определение трека</h3>
+        <p>Виджет сам находит запущенный Spotify и показывает название песни и исполнителя — без всяких настроек.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </div>
+        <h3>Точное состояние</h3>
+        <p>Читает аудио-сессию Windows напрямую — статус Play/Pause всегда совпадает с реальностью, до миллисекунды.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+        </div>
+        <h3>Полное управление</h3>
+        <p>Play, Pause, Next, Previous — прямо из виджета. Не нужно переключаться на Spotify, чтобы перелистнуть трек.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20V10M18 20V4M6 20v-4"/>
+          </svg>
+        </div>
+        <h3>Живой эквалайзер</h3>
+        <p>30 анимированных полос танцуют в такт музыке и плавно замирают на паузе. Мелочь, а приятно.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h3>Ноль зависимостей</h3>
+        <p>Только PyQt6. Никаких WinRT, winsdk, Spotify API и OAuth. Один файл — одна установка.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+        <h3>Собран в один .exe</h3>
+        <p>Упаковка в один файл через PyInstaller — запускается двойным кликом, автозапуск в один ярлык.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== HOW ==================== -->
+<section id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Как это работает</h2>
+      <p>Никакой магии и API. Всё прозрачно и локально — данные не покидают твой компьютер.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">01</div>
+        <h3>Находит окно Spotify</h3>
+        <p>Виджет перебирает все открытые окна Windows и определяет нужное через имя процесса.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">02</div>
+        <h3>Читает заголовок</h3>
+        <p>Из заголовка окна извлекаются название трека и исполнитель — без обращения к серверам.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">03</div>
+        <h3>Слушает аудио-сессию</h3>
+        <p>Через Core Audio API проверяет активность аудиопотока — это и есть Play/Pause статус.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">04</div>
+        <h3>Отправляет команды</h3>
+        <p>Play/Pause/Next/Prev передаются как настоящие медиа-клавиши — Spotify реагирует мгновенно.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== INSTALL ==================== -->
+<section id="install">
+  <div class="wrap">
+    <div class="install">
+      <div class="reveal">
+        <h2>Установка за 30 секунд</h2>
+        <p>Нужен только Python 3.9+ и PyQt6. Остальное виджет делает сам — никаких конфигов, ключей и регистраций.</p>
+        <p style="color: var(--text-mute); font-size: 14px;">
+          Или скачай готовый .exe — просто запусти и всё.
+        </p>
+      </div>
+
+      <div class="code reveal">
+        <div class="code-head">
+          <div class="d d1"></div>
+          <div class="d d2"></div>
+          <div class="d d3"></div>
+          <span>PowerShell</span>
+        </div>
+        <div class="code-body">
+          <div><span class="prompt">›</span><span class="cmd">python -m pip install PyQt6</span></div>
+          <div class="cmt">&nbsp;&nbsp;# установка библиотеки</div>
+          <div style="height:8px"></div>
+          <div><span class="prompt">›</span><span class="cmd">python spotify_widget.py</span></div>
+          <div class="cmt">&nbsp;&nbsp;# запуск виджета</div>
+          <div style="height:8px"></div>
+          <div><span class="prompt">›</span><span class="cmd">python build.py</span></div>
+          <div class="cmt">&nbsp;&nbsp;# сборка в exe</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== STATS ==================== -->
+<section>
+  <div class="wrap">
+    <div class="stats reveal">
+      <div>
+        <div class="stat-num">400</div>
+        <div class="stat-label">строк кода</div>
+      </div>
+      <div>
+        <div class="stat-num">0</div>
+        <div class="stat-label">внешних API</div>
+      </div>
+      <div>
+        <div class="stat-num">&lt;1%</div>
+        <div class="stat-label">нагрузка CPU</div>
+      </div>
+      <div>
+        <div class="stat-num">35 МБ</div>
+        <div class="stat-label">один .exe</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CTA ==================== -->
+<section id="download">
+  <div class="wrap">
+    <div class="cta reveal">
+      <h2>Готов попробовать?</h2>
+      <p>Скачай собранный .exe — распакуй, запусти, и наслаждайся музыкой с удобным виджетом на рабочем столе.</p>
+      <div class="hero-actions" style="justify-content: center;">
+        <a href="dist/SpotifyWidget.exe" download class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Скачать SpotifyWidget.exe
+        </a>
+        <a href="https://github.com" target="_blank" class="btn btn-ghost">
+          Посмотреть исходники
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <div>© 2026 Spotify Widget. Не связан с Spotify AB.</div>
+      <div style="display:flex; gap:24px;">
+        <a href="#features">Возможности</a>
+        <a href="#install">Установка</a>
+        <a href="#download">Скачать</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================== JS ==================== -->
+<script>
+  // ---- Эквалайзер ----
+  const eq = document.getElementById('eq');
+  const BAR_COUNT = 28;
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'eq-bar';
+    bar.style.animationDelay = (i * 0.07) + 's';
+    bar.style.animationDuration = (0.7 + Math.random() * 0.6).toFixed(2) + 's';
+    eq.appendChild(bar);
+  }
+
+  // ---- Навбар при скролле ----
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 20) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  });
+
+  // ---- Reveal on scroll ----
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ---- Плавное появление элементов с задержкой ----
+  document.querySelectorAll('.feature.reveal').forEach((el, i) => {
+    el.style.transitionDelay = (i * 0.07) + 's';
+  });
+  document.querySelectorAll('.step.reveal').forEach((el, i) => {
+    el.style.transitionDelay = (i * 0.1) + 's';
+  });
+
+  // ---- Параллакс для мокапа ----
+  const widget = document.querySelector('.widget');
+  const hero = document.querySelector('.hero');
+  if (widget && hero && window.matchMedia('(min-width: 940px)').matches) {
+    hero.addEventListener('mousemove', (e) => {
+      const r = hero.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      widget.style.transform =
+        `rotateY(${-12 + x * 14}deg) rotateX(${6 - y * 10}deg) translateY(-6px)`;
+    });
+    hero.addEventListener('mouseleave', () => {
+      widget.style.transform = '';
+    });
+  }
+
+  // ---- Плавная прокрутка для старых браузеров ----
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href');
+      if (id.length > 1) {
+        const target = document.querySelector(id);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
